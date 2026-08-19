@@ -1,0 +1,142 @@
+/* Rotating glow frames on the six station cards, plus a flowing gradient on
+   the headings. Both effects are built only from properties the dark-theme
+   pass does not own: no background colour, no body text colour, no border
+   colour is set anywhere in this file. */
+
+/* On :root so the theme owner can reuse the same four stops. */
+:root {
+  --c1: #0894ff;
+  --c2: #c959dd;
+  --c3: #ff2e54;
+  --c4: #ff9004;
+  --dur: 5s;
+}
+
+/* A plain custom property is a string as far as animation is concerned, so it
+   would jump 0deg -> 360deg with no interpolation. Registering it as an
+   <angle> is what makes the conic gradient actually rotate. */
+@property --ga {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes glow-rotate {
+  to {
+    --ga: 360deg;
+  }
+}
+
+@keyframes glow-text-flow {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* ---------- Feature one: rotating glow frame ---------- */
+
+/* FRAGILE — READ THIS BEFORE ADDING ANYTHING TO .station.
+   The glow is a ::before at z-index: -1, and it is only visible because
+   .station does NOT create a stacking context: it is position: relative with
+   z-index: auto, and neither .stations-grid (a plain grid) nor anything else
+   between it and <main> creates one either. So the -1 resolves all the way up
+   into <main> (position: relative; z-index: 1) and paints there — above main's
+   own transparent background, below the station's opaque one.
+
+   Adding ANY of transform, filter, isolation, opacity < 1, will-change, or an
+   explicit z-index to .station turns it into a stacking context, traps the
+   ::before inside it, and the glow disappears behind the card's own background.
+   Nothing errors: no test, no lint, no typecheck sees it. You just lose the
+   effect. If the glow ever vanishes, look here first. */
+.station {
+  position: relative;
+}
+
+.station::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  pointer-events: none;
+
+  /* Tracks whatever radius the theme sets rather than hardcoding one, so a
+     future card-radius change can't leave the glow a different shape. */
+  border-radius: inherit;
+  filter: blur(12px);
+  background-image: conic-gradient(
+    from var(--ga) at 50% 50%,
+    var(--c1),
+    var(--c2),
+    var(--c3),
+    var(--c4),
+    var(--c1)
+  );
+  animation: glow-rotate var(--dur) linear infinite;
+}
+
+/* ---------- Feature two: flowing gradient headings ---------- */
+
+/* Headings only — body copy keeps the theme's own colour so it stays readable
+   when this is projected. */
+main h1,
+main h2 {
+  background-image: linear-gradient(
+    90deg,
+    var(--c1),
+    var(--c2),
+    var(--c3),
+    var(--c4),
+    var(--c1)
+  );
+  background-size: 200% 100%;
+
+  /* Safari only shipped unprefixed background-clip: text in 14; the prefixed
+     form is what actually clips there, so it stays despite the lint rule. */
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: glow-text-flow calc(var(--dur) * 2) linear infinite;
+}
+
+/* h1 already carries `animation: flicker 7s ease-in-out infinite` from
+   styles.css, and `animation` replaces rather than appends — declaring only
+   glow-text-flow here would silently drop the flicker. Both are listed so the
+   two coexist (flicker drives text-shadow, glow-text-flow drives
+   background-position, so they never fight over a property).
+   COUPLING: the flicker timing below is copied from styles.css. If the theme
+   owner retunes it there, this needs the same edit. */
+main h1 {
+  animation:
+    flicker 7s ease-in-out infinite,
+    glow-text-flow calc(var(--dur) * 2) linear infinite;
+}
+
+/* The six station headings wrap their Chinese glyph in a span that styles.css
+   paints with --blood. background-clip: text clips the h2's gradient to every
+   glyph, but a descendant with its own opaque colour paints straight over it —
+   so the glyph would stay solid red while the English flowed. `inherit` picks
+   up the h2's `transparent` and lets the gradient through.
+   Specificity: `.station h2 span[lang="zh"]` in styles.css is 0-2-2, so this
+   needs 0-2-3 to win on specificity alone rather than on stylesheet order. */
+main .station h2 span[lang="zh"] {
+  color: inherit;
+}
+
+/* ---------- Reduced motion ---------- */
+
+/* Both effects hold a static frame rather than disappearing: the glow freezes
+   at a fixed angle, the heading gradient parks at its start position. */
+@media (prefers-reduced-motion: reduce) {
+  .station::before {
+    --ga: 135deg;
+
+    animation: none;
+  }
+
+  main h1,
+  main h2 {
+    background-position: 0 0;
+    animation: none;
+  }
+}
