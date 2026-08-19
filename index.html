@@ -11,6 +11,20 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="lightning-overlay" data-testid="lightning-overlay" aria-hidden="true"></div>
+    <div id="bubble-field" data-testid="bubble-field" aria-hidden="true"></div>
+    <div
+      id="sun"
+      class="sun"
+      data-testid="sun"
+      tabindex="0"
+      role="slider"
+      aria-label="Sun position"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="20"
+    ></div>
+
     <header>
       <nav aria-label="Primary">
         <a href="./">The Six As-Ifs</a>
@@ -18,6 +32,9 @@
       <p class="counter" aria-live="polite">
         Tried to hold on: <span id="hold-count">0</span>
       </p>
+      <button type="button" id="sound-toggle" data-testid="sound-toggle" aria-pressed="false">
+        <span aria-hidden="true">🔊</span> Sound on
+      </button>
     </header>
 
     <main>
@@ -53,6 +70,7 @@
         </p>
       </section>
 
+      <div class="stations-grid">
       <section class="station" aria-labelledby="dream-heading" data-testid="station-dream">
         <h2 id="dream-heading"><span lang="zh">夢</span> &middot; A dream</h2>
         <p>A dream feels solid while you're in it. Try to pin one word down.</p>
@@ -95,16 +113,16 @@
       <section class="station" aria-labelledby="shadow-heading" data-testid="station-shadow">
         <h2 id="shadow-heading"><span lang="zh">影</span> &middot; A shadow</h2>
         <p>
-          Move the light with the arrow keys (or drag it). Then try to grab the shadow
-          itself.
+          A sun crosses the whole page above. Drag it, or tab to it and use the arrow
+          keys, all the way from one edge to the other &mdash; then try to grab the
+          shadow itself, down here.
         </p>
-        <div class="shadow-stage" id="shadow-stage" data-testid="shadow-stage" tabindex="0">
+        <div class="shadow-stage" id="shadow-stage" data-testid="shadow-stage">
           <div class="shadow-object" id="shadow-object"></div>
           <div class="shadow-cast" id="shadow-cast" data-testid="shadow-cast"></div>
-          <div class="shadow-light" id="shadow-light"></div>
         </div>
         <p class="station-note" id="shadow-note" role="status">
-          Focus the stage above, then use the arrow keys to move the light.
+          Drag the sun at the top of the page, or tab to it and use the arrow keys.
         </p>
       </section>
 
@@ -136,6 +154,7 @@
         </button>
         <p class="station-note" id="lightning-note" role="status"></p>
       </section>
+      </div>
 
       <section class="outro" aria-labelledby="outro-heading">
         <h2 id="outro-heading">Nothing above was rigged</h2>

@@ -4,6 +4,25 @@
 // that is actually an attempt to hold on, never on the action that summons
 // the thing in the first place.
 
+import {
+  isMuted,
+  playBubblePop,
+  playDewEvaporate,
+  playDewForm,
+  playDewShake,
+  playDreamDissolve,
+  playDreamReveal,
+  playDreamSwap,
+  playIllusionFlip,
+  playLightningReplay,
+  playLightningStrike,
+  playShadowThud,
+  setMuted,
+  startBubbleTone,
+  stopBubbleTone,
+  updateBubbleTone,
+} from "./audio";
+
 const holdCountEl = document.querySelector<HTMLElement>("#hold-count");
 let holdCount = 0;
 
@@ -38,6 +57,7 @@ function initDream(): void {
 
   function swapWord(span: HTMLElement): void {
     tally();
+    playDreamSwap();
     const replacement = DREAM_SWAPS[Math.floor(Math.random() * DREAM_SWAPS.length)] ?? "something else";
     span.textContent = replacement;
     span.classList.add("swapped");
@@ -72,6 +92,7 @@ function initDream(): void {
       revealTimers.push(
         window.setTimeout(() => {
           sentence.append(makeWordSpan(word), document.createTextNode(" "));
+          playDreamReveal();
         }, index * 450),
       );
     }
@@ -81,6 +102,7 @@ function initDream(): void {
       sentence.classList.add("dissolved");
       note.textContent = "The room dissolved. You were never holding it up.";
       startButton.disabled = false;
+      playDreamDissolve();
     }, totalReveal + 2200);
   });
 }
@@ -94,6 +116,7 @@ function initIllusion(): void {
   let flipped = false;
   flipButton.addEventListener("click", () => {
     tally();
+    playIllusionFlip();
     flipped = !flipped;
     card.classList.toggle("flipped", flipped);
     note.textContent = flipped
@@ -102,13 +125,34 @@ function initIllusion(): void {
   });
 }
 
+const FIELD_BUBBLE_COUNT = 18;
+
+function spawnFieldBubbles(field: HTMLElement): void {
+  for (let i = 0; i < FIELD_BUBBLE_COUNT; i += 1) {
+    const el = document.createElement("div");
+    el.className = "field-bubble";
+    const size = 0.8 + Math.random() * 2.6;
+    const duration = 4 + Math.random() * 4;
+    const delay = Math.random() * 1.8;
+    el.style.left = `${Math.random() * 100}%`;
+    el.style.width = `${size}rem`;
+    el.style.height = `${size}rem`;
+    el.style.animationDuration = `${duration}s`;
+    el.style.animationDelay = `${delay}s`;
+    el.addEventListener("animationend", () => el.remove());
+    field.append(el);
+  }
+}
+
 function initBubble(): void {
   const bubble = document.querySelector<HTMLElement>("#bubble");
   const blowButton = document.querySelector<HTMLButtonElement>("#bubble-blow");
   const note = document.querySelector<HTMLElement>("#bubble-note");
-  if (!bubble || !blowButton || !note) return;
+  const field = document.querySelector<HTMLElement>("#bubble-field");
+  if (!bubble || !blowButton || !note || !field) return;
   const bubbleEl = bubble;
   const noteEl = note;
+  const fieldEl = field;
 
   let growTimer: number | undefined;
   let popAt = 0;
@@ -131,20 +175,25 @@ function initBubble(): void {
 
   function pop(): void {
     stopGrowing();
+    stopBubbleTone();
     if (popped) return;
     popped = true;
     tally();
+    playBubblePop();
     bubbleEl.classList.add("popped");
     noteEl.textContent = "However carefully you held it, it popped anyway.";
   }
 
   function startBlowing(): void {
     reset();
+    startBubbleTone();
+    spawnFieldBubbles(fieldEl);
     const start = performance.now();
     growTimer = window.setInterval(() => {
       const elapsed = performance.now() - start;
       const size = Math.min(1, elapsed / popAt);
       bubbleEl.style.setProperty("--scale", size.toFixed(3));
+      updateBubbleTone(size);
       if (elapsed >= popAt) pop();
     }, 30);
   }
@@ -171,50 +220,51 @@ function initBubble(): void {
 }
 
 function initShadow(): void {
-  const stage = document.querySelector<HTMLElement>("#shadow-stage");
-  const light = document.querySelector<HTMLElement>("#shadow-light");
+  const sun = document.querySelector<HTMLElement>("#sun");
   const cast = document.querySelector<HTMLElement>("#shadow-cast");
   const note = document.querySelector<HTMLElement>("#shadow-note");
-  if (!stage || !light || !cast || !note) return;
-  const stageEl = stage;
-  const lightEl = light;
+  if (!sun || !cast || !note) return;
+  const sunEl = sun;
   const castEl = cast;
 
   let lightX = 20;
-  const STEP = 6;
+  const STEP = 4;
+  const MIN = 2;
+  const MAX = 98;
 
   function render(): void {
-    lightEl.style.left = `${lightX}%`;
+    sunEl.style.left = `${lightX}%`;
+    sunEl.setAttribute("aria-valuenow", String(Math.round(lightX)));
     const offset = (50 - lightX) * 1.1;
     castEl.style.transform = `translateX(${offset}%)`;
   }
 
-  function moveLight(delta: number): void {
-    lightX = Math.min(90, Math.max(10, lightX + delta));
+  function moveSun(delta: number): void {
+    lightX = Math.min(MAX, Math.max(MIN, lightX + delta));
     render();
   }
 
   function updateFromPointer(event: PointerEvent): void {
-    const rect = stageEl.getBoundingClientRect();
-    const percent = ((event.clientX - rect.left) / rect.width) * 100;
-    lightX = Math.min(90, Math.max(10, percent));
+    const percent = (event.clientX / window.innerWidth) * 100;
+    lightX = Math.min(MAX, Math.max(MIN, percent));
     render();
   }
 
-  stage.addEventListener("keydown", (event) => {
+  sunEl.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
-      moveLight(-STEP);
+      moveSun(-STEP);
       event.preventDefault();
     }
     if (event.key === "ArrowRight") {
-      moveLight(STEP);
+      moveSun(STEP);
       event.preventDefault();
     }
   });
 
   let dragging = false;
-  stage.addEventListener("pointerdown", (event) => {
+  sunEl.addEventListener("pointerdown", (event) => {
     dragging = true;
+    sunEl.setPointerCapture(event.pointerId);
     updateFromPointer(event);
   });
   window.addEventListener("pointermove", (event) => {
@@ -226,6 +276,7 @@ function initShadow(): void {
 
   cast.addEventListener("click", () => {
     tally();
+    playShadowThud();
     note.textContent = "Nothing there. It's just where the light doesn't reach.";
   });
 
@@ -249,6 +300,7 @@ function initDew(): void {
     freezeButton.disabled = false;
     formButton.disabled = true;
     note.textContent = "Forming. It has until sunrise, whether you watch or not.";
+    playDewForm();
 
     evaporateTimer = window.setTimeout(() => {
       drop.classList.remove("forming");
@@ -256,11 +308,13 @@ function initDew(): void {
       note.textContent = "Gone. Freezing it wasn't ever an option this page offered.";
       freezeButton.disabled = true;
       formButton.disabled = false;
+      playDewEvaporate();
     }, LIFETIME_MS);
   });
 
   freezeButton.addEventListener("click", () => {
     tally();
+    playDewShake();
     drop.classList.add("shaken");
     window.setTimeout(() => drop.classList.remove("shaken"), 300);
     note.textContent = "It kept going. This button was always cosmetic.";
@@ -269,19 +323,26 @@ function initDew(): void {
 
 function initLightning(): void {
   const stage = document.querySelector<HTMLElement>("#lightning-stage");
+  const overlay = document.querySelector<HTMLElement>("#lightning-overlay");
   const strikeButton = document.querySelector<HTMLButtonElement>("#lightning-strike");
   const replayButton = document.querySelector<HTMLButtonElement>("#lightning-replay");
   const note = document.querySelector<HTMLElement>("#lightning-note");
-  if (!stage || !strikeButton || !replayButton || !note) return;
+  if (!stage || !overlay || !strikeButton || !replayButton || !note) return;
   const stageEl = stage;
+  const overlayEl = overlay;
   const noteEl = note;
   const replayButtonEl = replayButton;
 
   function flash(slow: boolean): void {
     stageEl.classList.remove("flash", "flash-slow");
+    overlayEl.classList.remove("flash", "flash-slow");
     // Force a reflow so re-adding the class restarts the animation.
     void stageEl.offsetWidth;
-    stageEl.classList.add(slow ? "flash-slow" : "flash");
+    const flashClass = slow ? "flash-slow" : "flash";
+    stageEl.classList.add(flashClass);
+    overlayEl.classList.add(flashClass);
+    if (slow) playLightningReplay();
+    else playLightningStrike();
     noteEl.textContent = slow
       ? "Stretched to a second and a half. Still nothing in the middle to hold onto."
       : "That took under a fifth of a second. Hit replay to look slower.";
@@ -295,9 +356,33 @@ function initLightning(): void {
   });
 }
 
+function initSoundToggle(): void {
+  const button = document.querySelector<HTMLButtonElement>("#sound-toggle");
+  if (!button) return;
+  const buttonEl = button;
+
+  function render(): void {
+    const muted = isMuted();
+    buttonEl.setAttribute("aria-pressed", String(!muted));
+    buttonEl.replaceChildren();
+    const icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = muted ? "🔇" : "🔊";
+    buttonEl.append(icon, document.createTextNode(muted ? " Sound off" : " Sound on"));
+  }
+
+  buttonEl.addEventListener("click", () => {
+    setMuted(!isMuted());
+    render();
+  });
+
+  render();
+}
+
 initDream();
 initIllusion();
 initBubble();
 initShadow();
 initDew();
 initLightning();
+initSoundToggle();
