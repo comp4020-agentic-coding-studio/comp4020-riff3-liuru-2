@@ -1,0 +1,25 @@
+/* The trail canvas sits behind the page content and never takes pointer
+   events. z-index stays at 0 deliberately — the sticky header already sits at
+   10, and anything higher here would put a decorative layer over real content. */
+canvas[data-trails] {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* `pointer-events: none` keeps the canvas out of hit-testing, but not out of
+   the paint order: a positioned z-index: 0 element still paints above the
+   non-positioned block content of <main>, so without this the trail draws over
+   the body text (verified in the browser, not assumed). <header> already sits
+   in its own stacking context at z-index 10, so only <main> needs lifting.
+
+   This rule targets an element styled in styles.css but lives here on purpose —
+   keeping the trail feature to its own files means zero merge conflict with
+   anyone else editing styles.css. */
+main {
+  position: relative;
+  z-index: 1;
+}
