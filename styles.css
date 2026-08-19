@@ -622,6 +622,7 @@ button:hover:not(:disabled) {
   z-index: 1000;
   pointer-events: none;
   opacity: 0;
+
   /* Difference-blends against whatever's underneath, so the bolt still
      reads as a dark, jagged streak even while the page-wide flash below
      it washes everything else out to near-white. */
