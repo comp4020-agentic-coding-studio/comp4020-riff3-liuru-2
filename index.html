@@ -11,8 +11,26 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="dream-overlay" data-testid="dream-overlay" aria-hidden="true"></div>
+    <div id="illusion-sweep" data-testid="illusion-sweep" aria-hidden="true"></div>
     <div id="lightning-overlay" data-testid="lightning-overlay" aria-hidden="true"></div>
+    <div id="lightning-bolt" data-testid="lightning-bolt" aria-hidden="true">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        <polyline id="lightning-bolt-main" points=""></polyline>
+        <polyline id="lightning-bolt-branch" points=""></polyline>
+      </svg>
+    </div>
     <div id="bubble-field" data-testid="bubble-field" aria-hidden="true"></div>
+    <div id="bubble-pop-flash" data-testid="bubble-pop-flash" aria-hidden="true"></div>
+    <div id="dew-mist" data-testid="dew-mist" aria-hidden="true"></div>
+    <div
+      id="page-shadow"
+      class="page-shadow"
+      data-testid="page-shadow"
+      tabindex="0"
+      role="button"
+      aria-label="The shadow, cast across the page. Click for what's underneath."
+    ></div>
     <div
       id="sun"
       class="sun"
@@ -113,13 +131,20 @@
       <section class="station" aria-labelledby="shadow-heading" data-testid="station-shadow">
         <h2 id="shadow-heading"><span lang="zh">影</span> &middot; A shadow</h2>
         <p>
-          A sun crosses the whole page above. Drag it, or tab to it and use the arrow
-          keys, all the way from one edge to the other &mdash; then try to grab the
-          shadow itself, down here.
+          A sun crosses the whole page above, and its shadow falls all the way across
+          the page below. Drag the sun, or tab to it and use the arrow keys &mdash; then
+          try to grab the shadow itself, wherever it's fallen.
         </p>
         <div class="shadow-stage" id="shadow-stage" data-testid="shadow-stage">
           <div class="shadow-object" id="shadow-object"></div>
-          <div class="shadow-cast" id="shadow-cast" data-testid="shadow-cast"></div>
+          <div
+            class="shadow-cast"
+            id="shadow-cast"
+            data-testid="shadow-cast"
+            tabindex="0"
+            role="button"
+            aria-label="The shadow. Click, or press Enter, for what's underneath."
+          ></div>
         </div>
         <p class="station-note" id="shadow-note" role="status">
           Drag the sun at the top of the page, or tab to it and use the arrow keys.

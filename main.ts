@@ -50,7 +50,9 @@ function initDream(): void {
   const sentence = document.querySelector<HTMLElement>('[data-testid="dream-sentence"]');
   const startButton = document.querySelector<HTMLButtonElement>("#dream-start");
   const note = document.querySelector<HTMLElement>("#dream-note");
-  if (!sentence || !startButton || !note) return;
+  const overlay = document.querySelector<HTMLElement>("#dream-overlay");
+  if (!sentence || !startButton || !note || !overlay) return;
+  const overlayEl = overlay;
 
   let dissolveTimer: number | undefined;
   const revealTimers: number[] = [];
@@ -85,6 +87,7 @@ function initDream(): void {
     for (const timer of revealTimers.splice(0)) window.clearTimeout(timer);
     sentence.replaceChildren();
     sentence.classList.remove("dissolved");
+    overlayEl.classList.remove("active");
     note.textContent = "";
     startButton.disabled = true;
 
@@ -100,6 +103,7 @@ function initDream(): void {
     const totalReveal = DREAM_WORDS.length * 450;
     dissolveTimer = window.setTimeout(() => {
       sentence.classList.add("dissolved");
+      overlayEl.classList.add("active");
       note.textContent = "The room dissolved. You were never holding it up.";
       startButton.disabled = false;
       playDreamDissolve();
@@ -111,7 +115,9 @@ function initIllusion(): void {
   const card = document.querySelector<HTMLElement>("#illusion-card");
   const flipButton = document.querySelector<HTMLButtonElement>("#illusion-flip");
   const note = document.querySelector<HTMLElement>("#illusion-note");
-  if (!card || !flipButton || !note) return;
+  const sweep = document.querySelector<HTMLElement>("#illusion-sweep");
+  if (!card || !flipButton || !note || !sweep) return;
+  const sweepEl = sweep;
 
   let flipped = false;
   flipButton.addEventListener("click", () => {
@@ -119,6 +125,9 @@ function initIllusion(): void {
     playIllusionFlip();
     flipped = !flipped;
     card.classList.toggle("flipped", flipped);
+    sweepEl.classList.remove("sweep");
+    void sweepEl.offsetWidth;
+    sweepEl.classList.add("sweep");
     note.textContent = flipped
       ? "The far side isn't there. It never needed one to look solid from here."
       : "From the front, it's convincing again.";
@@ -149,10 +158,12 @@ function initBubble(): void {
   const blowButton = document.querySelector<HTMLButtonElement>("#bubble-blow");
   const note = document.querySelector<HTMLElement>("#bubble-note");
   const field = document.querySelector<HTMLElement>("#bubble-field");
-  if (!bubble || !blowButton || !note || !field) return;
+  const popFlash = document.querySelector<HTMLElement>("#bubble-pop-flash");
+  if (!bubble || !blowButton || !note || !field || !popFlash) return;
   const bubbleEl = bubble;
   const noteEl = note;
   const fieldEl = field;
+  const popFlashEl = popFlash;
 
   let growTimer: number | undefined;
   let popAt = 0;
@@ -181,6 +192,9 @@ function initBubble(): void {
     tally();
     playBubblePop();
     bubbleEl.classList.add("popped");
+    popFlashEl.classList.remove("pop");
+    void popFlashEl.offsetWidth;
+    popFlashEl.classList.add("pop");
     noteEl.textContent = "However carefully you held it, it popped anyway.";
   }
 
@@ -222,10 +236,13 @@ function initBubble(): void {
 function initShadow(): void {
   const sun = document.querySelector<HTMLElement>("#sun");
   const cast = document.querySelector<HTMLElement>("#shadow-cast");
+  const pageShadow = document.querySelector<HTMLElement>("#page-shadow");
   const note = document.querySelector<HTMLElement>("#shadow-note");
-  if (!sun || !cast || !note) return;
+  if (!sun || !cast || !pageShadow || !note) return;
   const sunEl = sun;
   const castEl = cast;
+  const pageShadowEl = pageShadow;
+  const noteEl = note;
 
   let lightX = 20;
   const STEP = 4;
@@ -237,6 +254,10 @@ function initShadow(): void {
     sunEl.setAttribute("aria-valuenow", String(Math.round(lightX)));
     const offset = (50 - lightX) * 1.1;
     castEl.style.transform = `translateX(${offset}%)`;
+    // The page-wide shadow falls opposite the sun, clamped so its wide
+    // shape never runs fully off either edge.
+    const pageX = Math.min(88, Math.max(12, 100 - lightX));
+    pageShadowEl.style.left = `${pageX}%`;
   }
 
   function moveSun(delta: number): void {
@@ -274,10 +295,28 @@ function initShadow(): void {
     dragging = false;
   });
 
-  cast.addEventListener("click", () => {
+  function reveal(): void {
     tally();
     playShadowThud();
-    note.textContent = "Nothing there. It's just where the light doesn't reach.";
+    noteEl.textContent = "Nothing there. It's just where the light doesn't reach.";
+    pageShadowEl.classList.remove("revealed");
+    void pageShadowEl.offsetWidth;
+    pageShadowEl.classList.add("revealed");
+  }
+
+  castEl.addEventListener("click", reveal);
+  castEl.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      reveal();
+    }
+  });
+  pageShadowEl.addEventListener("click", reveal);
+  pageShadowEl.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      reveal();
+    }
   });
 
   render();
@@ -288,7 +327,9 @@ function initDew(): void {
   const formButton = document.querySelector<HTMLButtonElement>("#dew-form");
   const freezeButton = document.querySelector<HTMLButtonElement>("#dew-freeze");
   const note = document.querySelector<HTMLElement>("#dew-note");
-  if (!drop || !formButton || !freezeButton || !note) return;
+  const mist = document.querySelector<HTMLElement>("#dew-mist");
+  if (!drop || !formButton || !freezeButton || !note || !mist) return;
+  const mistEl = mist;
 
   const LIFETIME_MS = 6000;
   let evaporateTimer: number | undefined;
@@ -297,6 +338,7 @@ function initDew(): void {
     if (evaporateTimer !== undefined) window.clearTimeout(evaporateTimer);
     drop.classList.remove("evaporated");
     drop.classList.add("forming");
+    mistEl.classList.add("active");
     freezeButton.disabled = false;
     formButton.disabled = true;
     note.textContent = "Forming. It has until sunrise, whether you watch or not.";
@@ -305,6 +347,7 @@ function initDew(): void {
     evaporateTimer = window.setTimeout(() => {
       drop.classList.remove("forming");
       drop.classList.add("evaporated");
+      mistEl.classList.remove("active");
       note.textContent = "Gone. Freezing it wasn't ever an option this page offered.";
       freezeButton.disabled = true;
       formButton.disabled = false;
@@ -321,26 +364,77 @@ function initDew(): void {
   });
 }
 
+// Builds a jagged N-point path down the page, in the 0-100 viewBox units
+// that #lightning-bolt's SVG stretches to the full viewport.
+function boltPoints(startX: number, startY: number, endY: number, segments: number, spread: number): string {
+  const points: string[] = [`${startX},${startY}`];
+  let x = startX;
+  const stepY = (endY - startY) / segments;
+  for (let i = 1; i <= segments; i += 1) {
+    x += (Math.random() - 0.5) * spread;
+    x = Math.min(96, Math.max(4, x));
+    const y = startY + stepY * i;
+    points.push(`${x},${y}`);
+  }
+  return points.join(" ");
+}
+
+function drawBolt(polyline: SVGPolylineElement, points: string, durationMs: number): void {
+  polyline.setAttribute("points", points);
+  const length = polyline.getTotalLength();
+  polyline.style.transition = "none";
+  polyline.style.strokeDasharray = `${length}`;
+  polyline.style.strokeDashoffset = `${length}`;
+  void polyline.getBoundingClientRect();
+  requestAnimationFrame(() => {
+    polyline.style.transition = `stroke-dashoffset ${durationMs}ms ease-out`;
+    polyline.style.strokeDashoffset = "0";
+  });
+}
+
 function initLightning(): void {
   const stage = document.querySelector<HTMLElement>("#lightning-stage");
   const overlay = document.querySelector<HTMLElement>("#lightning-overlay");
+  const bolt = document.querySelector<HTMLElement>("#lightning-bolt");
+  const boltMain = document.querySelector<SVGPolylineElement>("#lightning-bolt-main");
+  const boltBranch = document.querySelector<SVGPolylineElement>("#lightning-bolt-branch");
   const strikeButton = document.querySelector<HTMLButtonElement>("#lightning-strike");
   const replayButton = document.querySelector<HTMLButtonElement>("#lightning-replay");
   const note = document.querySelector<HTMLElement>("#lightning-note");
-  if (!stage || !overlay || !strikeButton || !replayButton || !note) return;
+  if (!stage || !overlay || !bolt || !boltMain || !boltBranch || !strikeButton || !replayButton || !note) return;
   const stageEl = stage;
   const overlayEl = overlay;
+  const boltEl = bolt;
+  const boltMainEl = boltMain;
+  const boltBranchEl = boltBranch;
   const noteEl = note;
   const replayButtonEl = replayButton;
 
   function flash(slow: boolean): void {
     stageEl.classList.remove("flash", "flash-slow");
     overlayEl.classList.remove("flash", "flash-slow");
+    boltEl.classList.remove("strike", "flash-slow");
     // Force a reflow so re-adding the class restarts the animation.
     void stageEl.offsetWidth;
     const flashClass = slow ? "flash-slow" : "flash";
     stageEl.classList.add(flashClass);
     overlayEl.classList.add(flashClass);
+    boltEl.classList.add(slow ? "flash-slow" : "strike");
+
+    const startX = 30 + Math.random() * 40;
+    const groundY = 60 + Math.random() * 25;
+    const drawMs = slow ? 1100 : 140;
+    drawBolt(boltMainEl, boltPoints(startX, 0, groundY, 7, 14), drawMs);
+
+    const forkAt = 0.35 + Math.random() * 0.25;
+    const forkStartY = groundY * forkAt;
+    const forkStartX = startX + (Math.random() - 0.5) * 6;
+    drawBolt(
+      boltBranchEl,
+      boltPoints(forkStartX, forkStartY, forkStartY + (groundY - forkStartY) * 0.6, 4, 18),
+      drawMs,
+    );
+
     if (slow) playLightningReplay();
     else playLightningStrike();
     noteEl.textContent = slow

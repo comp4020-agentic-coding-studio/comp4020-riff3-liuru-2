@@ -466,6 +466,127 @@ button:hover:not(:disabled) {
   }
 }
 
+/* Full-page effects --- each station's mechanic reaching past its own card */
+#dream-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  backdrop-filter: blur(0);
+  background: rgb(5 3 8 / 0%);
+  transition: opacity 1.8s ease, backdrop-filter 1.8s ease, background 1.8s ease;
+}
+
+#dream-overlay.active {
+  opacity: 1;
+  backdrop-filter: blur(5px);
+  background: rgb(5 3 8 / 35%);
+}
+
+#illusion-sweep {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 30%, rgb(255 255 255 / 18%) 50%, transparent 70%);
+  background-size: 300% 300%;
+  background-position: 150% 150%;
+  opacity: 0;
+}
+
+#illusion-sweep.sweep {
+  animation: page-sweep 0.7s ease;
+}
+
+@keyframes page-sweep {
+  0% {
+    opacity: 1;
+    background-position: -50% -50%;
+  }
+
+  100% {
+    opacity: 0;
+    background-position: 150% 150%;
+  }
+}
+
+#dew-mist {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  backdrop-filter: blur(0) brightness(1);
+  background: radial-gradient(ellipse 120% 80% at 50% 100%, rgb(143 207 232 / 18%), transparent 70%);
+  transition: opacity 2s ease, backdrop-filter 2s ease;
+}
+
+#dew-mist.active {
+  opacity: 1;
+  backdrop-filter: blur(1.5px) brightness(1.05);
+}
+
+.page-shadow {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 20%;
+  width: min(70vw, 60rem);
+  height: 4rem;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgb(0 0 0 / 65%), transparent 75%);
+  border-radius: 50%;
+  filter: blur(1px);
+  cursor: pointer;
+  z-index: 4;
+  border: none;
+}
+
+.page-shadow:focus-visible {
+  outline: 3px solid var(--blood);
+  outline-offset: 4px;
+}
+
+.page-shadow.revealed {
+  animation: shadow-pulse 0.4s ease;
+}
+
+@keyframes shadow-pulse {
+  50% {
+    opacity: 0.45;
+    transform: translateX(-50%) scale(1.15);
+  }
+}
+
+#bubble-pop-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 60%, rgb(182 220 255 / 35%), transparent 60%);
+  opacity: 0;
+}
+
+#bubble-pop-flash.pop {
+  animation: pop-flash 0.5s ease;
+}
+
+@keyframes pop-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
 #lightning-overlay {
   position: fixed;
   inset: 0;
@@ -491,6 +612,70 @@ button:hover:not(:disabled) {
 
   50% {
     opacity: 0.92;
+  }
+}
+
+/* A real jagged bolt, drawn stroke-by-stroke, forked into the page above the flash */
+#lightning-bolt {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  /* Difference-blends against whatever's underneath, so the bolt still
+     reads as a dark, jagged streak even while the page-wide flash below
+     it washes everything else out to near-white. */
+  mix-blend-mode: difference;
+}
+
+#lightning-bolt svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+#lightning-bolt polyline {
+  fill: none;
+  stroke: #f8f6ff;
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 0.4rem #e4dcff) drop-shadow(0 0 2rem #b9a8ff);
+}
+
+#lightning-bolt.strike,
+#lightning-bolt.flash-slow {
+  animation: bolt-fade linear forwards;
+}
+
+#lightning-bolt.strike {
+  animation-duration: 0.45s;
+}
+
+#lightning-bolt.flash-slow {
+  animation-duration: 2.4s;
+}
+
+@keyframes bolt-fade {
+  0% {
+    opacity: 1;
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 0.5;
+  }
+
+  65% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
   }
 }
 
