@@ -386,3 +386,8 @@ initShadow();
 initDew();
 initLightning();
 initSoundToggle();
+
+import { initTrails } from "./trails";
+
+const trailsCanvas = document.querySelector<HTMLCanvasElement>("[data-trails]");
+if (trailsCanvas) initTrails(trailsCanvas);
